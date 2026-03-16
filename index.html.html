@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8"/>
+<title>Sistema de Gestión de Activos Viales</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+}
+
+#map{
+position:absolute;
+right:0;
+top:0;
+height:100%;
+width:75%;
+}
+
+#panel{
+position:absolute;
+left:0;
+top:0;
+height:100%;
+width:25%;
+background:white;
+padding:15px;
+overflow:auto;
+border-right:1px solid #ccc;
+}
+
+input{
+width:70%;
+padding:5px;
+}
+
+button{
+padding:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="panel">
+
+<h3>Sistema de Gestión de Activos Viales</h3>
+
+<input id="buscarRuta" placeholder="Buscar concesión o tramo"/>
+<button onclick="buscar()">Buscar</button>
+
+<hr>
+
+<div id="info">
+Haga clic en un eje vial para ver los atributos
+</div>
+
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+/* CREAR MAPA */
+
+var map = L.map('map').setView([-9.19,-75.015],6);
+
+
+/* MAPA BASE */
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+attribution:'OpenStreetMap'
+}).addTo(map);
+
+
+/* DIRECCION DE GEOSERVER */
+
+var geoserver="http://10.37.143.162:8080/geoserver/wms";
+
+
+/* CAPAS */
+
+var capas={
+
+"Autopista del Sol":"sigav:RVN_Autopista_del_Sol_Tramo_vial_Trujillo_Sullana",
+"IIRSA Norte":"sigav:RVN_IIRSANORTE",
+"IIRSA Centro":"sigav:RVN_IIRSA_Centro_T02",
+"IIRSA Sur Tramo 1":"sigav:RVN_IIRSA_Sur_Tramo_1__San_Juan_de_Marcona_Urcos",
+"IIRSA Sur Tramo 3":"sigav:RVN_IIRSA_Sur_Tramo_3_Inambari_IñaparI",
+"IIRSA Sur Tramo 4":"sigav:RVN_IIRSA_Sur_Tramo_4_Inambari_Azángaro",
+"IIRSA Sur Tramo 5":"sigav:RVN_IIRSA_Sur_Tramo_5_Matarani_Azángaro_Ilo",
+"IIRSA Sur Tramo 2":"sigav:RVN_IIRSA_Sur_Tramo__2",
+"Longitudinal de la Sierra":"sigav:RVN_Longitudinal_de_la_Sierra_Tramo_02",
+"Nuevo Mocupe Cayaltí":"sigav:RVN_Nuevo_Mocupe_Cayaltí_Oyotún",
+"Variante Pasamayo":"sigav:RVN_Ovalo_Chancay_Dv_Variante_Pasamayo_Huaral_Acos",
+"Pativilca Santa Trujillo":"sigav:RVN_Pativilca_Santa_Trujillo_Puerto_Salaverry",
+"Pucusana Cerro Azul":"sigav:RVN_Puente_Pucusana_Cerro_Azul_Ica",
+"Dv Quilca La Concordia":"sigav:RVN_Tramo_Vial_Dv_Quilca_La_Concordia",
+"Empalme Buenos Aires Canchaque":"sigav:T01_Empalme_1B_Buenos_Aires_Canchaque",
+"Ancón Huacho Pativilca":"sigav:RVN_Ancon_Huacho_Pativilca"
+
+};
+
+
+/* CREAR CAPAS EN EL MAPA */
+
+var capasLeaflet={};
+
+for(var nombre in capas){
+
+capasLeaflet[nombre]=L.tileLayer.wms(geoserver,{
+layers:capas[nombre],
+format:"image/png",
+transparent:true
+}).addTo(map);
+
+}
+
+
+/* BUSCADOR */
+
+function buscar(){
+
+var texto=document.getElementById("buscarRuta").value.toLowerCase();
+
+for(var c in capas){
+
+if(c.toLowerCase().includes(texto)){
+
+document.getElementById("info").innerHTML="<h4>"+c+"</h4>";
+
+map.setView([-9,-75],7);
+
+return;
+
+}
+
+}
+
+alert("No se encontró la ruta");
+
+}
+
+
+/* CONSULTA DE ATRIBUTOS */
+
+map.on('click', function(e) {
+
+var point = map.latLngToContainerPoint(e.latlng, map.getZoom());
+
+var size = map.getSize();
+
+var bbox = map.getBounds().toBBoxString();
+
+var layers = Object.values(capas).join(",");
+
+var url = geoserver +
+'?SERVICE=WMS' +
+'&VERSION=1.1.1' +
+'&REQUEST=GetFeatureInfo' +
+'&LAYERS=' + layers +
+'&QUERY_LAYERS=' + layers +
+'&BBOX=' + bbox +
+'&FEATURE_COUNT=5' +
+'&HEIGHT=' + size.y +
+'&WIDTH=' + size.x +
+'&INFO_FORMAT=text/html' +
+'&SRS=EPSG:4326' +
+'&X=' + Math.floor(point.x) +
+'&Y=' + Math.floor(point.y);
+
+fetch(url)
+.then(function(response){ return response.text(); })
+.then(function(data){
+
+if(data){
+
+document.getElementById("info").innerHTML = data;
+
+}
+
+});
+
+});
+
+var bbox=map.getBounds().toBBoxString();
+
+var size=map.getSize();
+
+var punto=map.latLngToContainerPoint(e.latlng);
+
+var url=geoserver
++"?service=WMS"
++"&version=1.1.1"
++"&request=GetFeatureInfo"
++"&layers="+Object.values(capas).join(",")
++"&query_layers="+Object.values(capas).join(",")
++"&bbox="+bbox
++"&feature_count=5"
++"&height="+size.y
++"&width="+size.x
++"&info_format=application/json"
++"&srs=EPSG:4326"
++"&x="+Math.floor(punto.x)
++"&y="+Math.floor(punto.y);
+
+
+fetch(url)
+.then(response=>response.json())
+.then(function(data){
+
+if(data.features.length>0){
+
+var props=data.features[0].properties;
+
+var html="<h4>Atributos del tramo</h4>";
+
+for(var p in props){
+
+html+="<b>"+p+"</b>: "+props[p]+"<br>";
+
+}
+
+document.getElementById("info").innerHTML=html;
+
+}
+
+});
+
+});
+
+</script>
+
+</body>
+
+</html>
