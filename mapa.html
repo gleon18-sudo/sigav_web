@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Visor Ejes Viales</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+#map{
+height:100vh;
+width:100%;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+/* CREAR MAPA */
+
+var map = L.map('map').setView([-9.19,-75.015],6);
+
+/* MAPA BASE */
+
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{
+attribution:'OpenStreetMap'
+}).addTo(map);
+
+
+/* DIRECCIÓN WMS DE GEOSERVER */
+
+var geoserver = "http://localhost:8080/geoserver/wms";
+
+
+/* LISTA DE CAPAS (PEGAR AQUÍ LOS NOMBRES) */
+
+var capas = [
+
+"sigav:RVN_Autopista_del_Sol_Tramo_vial_Trujillo_Sullana",
+"sigav:RVN_IIRSANORTE",
+"sigav:RVN_IIRSA_Centro_T02",
+"sigav:RVN_IIRSA_Sur_Tramo_1__San_Juan_de_Marcona_Urcos",
+"sigav:RVN_IIRSA_Sur_Tramo_3_Inambari_IñaparI",
+"sigav:RVN_IIRSA_Sur_Tramo_4_Inambari_Azángaro",
+"sigav:RVN_IIRSA_Sur_Tramo_5_Matarani_Azángaro_Ilo",
+"sigav:RVN_IIRSA_Sur_Tramo__2",
+"sigav:RVN_Longitudinal_de_la_Sierra_Tramo_02",
+"sigav:RVN_Nuevo_Mocupe_Cayaltí_Oyotún",
+"sigav:RVN_Ovalo_Chancay_Dv_Variante_Pasamayo_Huaral_Acos",
+"sigav:RVN_Pativilca_Santa_Trujillo_Puerto_Salaverry",
+"sigav:RVN_Puente_Pucusana_Cerro_Azul_Ica",
+"sigav:RVN_Tramo_Vial_Dv_Quilca_La_Concordia",
+"sigav:SHAPES_JERARQUIZADOS — T01_Empalme_1B_Buenos_Aires_Canchaque",
+"sigav:RVN_Ancon_Huacho_Pativilca"
+
+];
+
+
+/* CARGAR CAPAS AUTOMÁTICAMENTE */
+
+capas.forEach(function(nombre){
+
+var capa = L.tileLayer.wms(geoserver,{
+layers:nombre,
+format:'image/png',
+transparent:true
+});
+
+capa.addTo(map);
+
+});
+
+
+</script>
+
+</body>
+</html>
