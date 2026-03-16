@@ -199,6 +199,14 @@ var size=map.getSize();
 
 var punto=map.latLngToContainerPoint(e.latlng);
 
+map.on("click", function(e){
+
+var bbox = map.getBounds().toBBoxString();
+
+var size = map.getSize();
+
+var punto = map.latLngToContainerPoint(e.latlng, map.getZoom());
+
 var url=geoserver
 +"?service=WMS"
 +"&version=1.1.1"
@@ -214,12 +222,11 @@ var url=geoserver
 +"&x="+Math.floor(punto.x)
 +"&y="+Math.floor(punto.y);
 
-
 fetch(url)
 .then(response=>response.json())
 .then(function(data){
 
-if(data.features.length>0){
+if(data.features && data.features.length>0){
 
 var props=data.features[0].properties;
 
@@ -238,9 +245,3 @@ document.getElementById("info").innerHTML=html;
 });
 
 });
-
-</script>
-
-</body>
-
-</html>
