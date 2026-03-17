@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SIGAV</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body{margin:0;font-family:Arial;}
+
+#map{
+position:absolute;
+right:0;
+top:0;
+height:100%;
+width:75%;
+}
+
+#panel{
+position:absolute;
+left:0;
+top:0;
+height:100%;
+width:25%;
+background:white;
+padding:15px;
+overflow:auto;
+border-right:1px solid #ccc;
+}
+</style>
+</head>
+
+<body>
+
+<div id="panel">
+
+<h3>Sistema de Gestión de Activos Viales</h3>
+
+<input id="buscar" placeholder="Buscar ruta">
+<button onclick="buscarRuta()">Buscar</button>
+
+<hr>
+
+<div id="info">
+Haz clic en un tramo
+</div>
+
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+var mapa = L.map('map').setView([-9.19, -75.015], 6);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+attribution: '&copy; OpenStreetMap &copy; CartoDB',
+subdomains: 'abcd',
+maxZoom: 19
+}).addTo(mapa);
+
+/* CARGAR CAPAS */
+
+var capas={};
+
+function cargarCapa(nombre,url){
+
+fetch(url)
+.then(res=>res.json())
+.then(data=>{
+
+var capa=L.geoJSON(data,{
+
+onEachFeature:function(feature,layer){
+
+layer.on('click',function(){
+
+var props=feature.properties;
+
+var html="<h4>"+nombre+"</h4>";
+
+for(var p in props){
+html+="<b>"+p+"</b>: "+props[p]+"<br>";
+}
+
+document.getElementById("info").innerHTML=html;
+
+});
+
+}
+
+}).addTo(map);
+
+capas[nombre]=capa;
+
+});
+
+}
+
+/* AGREGA TUS 16 CAPAS AQUÍ */
+
+cargarCapa("Autopista del Sol","data/.geojson");
+cargarCapa("Empalme Buenos Aires Canchaque","data/BAC.geojson");
+cargarCapa("IIRSA Norte","data/IIRSA NORTE.geojson");
+cargarCapa("IIRSA Sur Tramo 1","data/IST1.geojson");
+cargarCapa("IIRSA Sur Tramo 2","data/IST2.geojson");
+cargarCapa("IIRSA Sur Tramo 3","data/IST3.geojson");
+cargarCapa("IIRSA Sur Tramo 4","data/IST4.geojson");
+cargarCapa("IIRSA Sur Tramo 5","data/IST5.geojson");
+cargarCapa("Longitudinal de la Sierra","data/LST2.geojson");
+cargarCapa("Nuevo Mocupe Cayaltí Oyotun","data/MCO.geojson");
+cargarCapa("Dv Quilca La Concordia","data/QUILCA.geojson");
+cargarCapa("Pativilca Santa Trujillo","data/RV4.geojson");
+cargarCapa("Ancón Huacho Pativilca","data/RV5.geojson");
+cargarCapa("Puente Pucusana Cerro Azul Ica","data/RV6.geojson");
+cargarCapa("IIRSA Centro","data/ICT2.geojson");
+cargarCapa("Ovalo Chancay Huaral Acos","data/CHANCAY - HUARAL - ACOS.geojson");
+
+
+/* BUSCADOR */
+
+function buscarRuta(){
+
+var texto=document.getElementById("buscar").value.toLowerCase();
+
+for(var c in capas){
+
+if(c.toLowerCase().includes(texto)){
+
+map.fitBounds(capas[c].getBounds());
+
+return;
+
+}
+
+}
+
+alert("Ruta no encontrada");
+
+}
+
+</script>
+
+</body>
+</html>
